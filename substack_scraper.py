@@ -30,10 +30,9 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.edge.service import Service as EdgeService
 from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
 
-from config import EMAIL, PASSWORD
+from config import EMAIL, PASSWORD, BASE_SUBSTACK_URL
 
 USE_PREMIUM: bool = True
-BASE_SUBSTACK_URL: str = "https://niallferguson.substack.com/"
 BASE_MD_DIR: str = "substack_md_files"
 BASE_HTML_DIR: str = "substack_html_pages"
 BASE_IMAGE_DIR: str = "substack_images"
@@ -1019,6 +1018,44 @@ class BaseSubstackScraper(ABC):
         self.save_essays_data_to_json(essays_data=essays_data)
         generate_html_file(author_name=self.writer_name)
 
+    def scrape_post(self, url: str) -> None:
+        """Scrape a single post and save as markdown, HTML, and JSON."""
+        soup = self.get_url_soup(url)
+        if soup is None:
+            print("❌ Failed to fetch post (may have failed authentication)")
+            return
+        
+        title, subtitle, like_count, date, md_content = self.extract_post_data(soup)
+
+        md_filepath = os.path.join(self.md_save_dir, self.get_filename_from_url(url, filetype=".md"))
+        html_filepath = os.path.join(self.html_save_dir, self.get_filename_from_url(url, filetype=".html"))
+
+        if self.download_images:
+            total_images = count_images_in_markdown(md_content)
+            if total_images > 0:
+                slug = get_post_slug(url)
+                print(f"📥 Downloading {total_images} images...")
+                with tqdm(total=total_images, desc=f"Downloading images for {slug}", leave=True) as img_pbar:
+                    md_content = process_markdown_images(md_content, self.writer_name, slug, img_pbar)
+                print("✅ Images downloaded!\n")
+
+        self.save_to_file(md_filepath, md_content)
+        print(f"✅ Saved markdown: {md_filepath}")
+
+        self.save_to_html_file(html_filepath, self.md_to_html(md_content))
+        print(f"✅ Saved HTML: {html_filepath}")
+
+        self.save_essays_data_to_json(essays_data=[{
+            "title": title, "subtitle": subtitle, "like_count": like_count,
+            "date": date, "url": url, "file_link": md_filepath, "html_link": html_filepath
+        }])
+        print(f"✅ Saved JSON metadata\n")
+
+        print("=" * 70)
+        print(f"✨ Successfully scraped: {title}")
+        print(f"   Date: {date}")
+        print(f"   Likes: {like_count}")
+        print("=" * 70)
 
 # =============================================================================
 # FREE CONTENT SCRAPER
@@ -1230,6 +1267,10 @@ Examples:
         help="The base URL of the Substack site to scrape."
     )
     parser.add_argument(
+        "--post-url", type=str,
+        help="Scrape a single specific post URL (overrides --url and --number)."
+    )
+    parser.add_argument(
         "-d", "--directory", type=str,
         help="The directory to save scraped markdown posts."
     )
@@ -1312,6 +1353,37 @@ def main():
     else:
         driver_path = args.edge_driver_path
         browser_path = args.edge_path
+
+    # Single post mode
+    if args.post_url:
+        if not is_post_url(args.post_url):
+            print(f"Error: {args.post_url} is not a valid Substack post URL")
+            return
+        
+        base_url = get_publication_url(args.post_url)
+        
+        if args.premium:
+            scraper = PremiumSubstackScraper(
+                base_substack_url=base_url,
+                md_save_dir=args.directory or BASE_MD_DIR,
+                html_save_dir=args.html_directory or BASE_HTML_DIR,
+                download_images=args.images,
+                browser=args.browser,
+                headless=args.headless,
+                use_persistent_profile=args.persistent_profile,
+                skip_login=args.skip_login,
+            )
+        else:
+            scraper = SubstackScraper(
+                base_substack_url=base_url,
+                md_save_dir=args.directory or BASE_MD_DIR,
+                html_save_dir=args.html_directory or BASE_HTML_DIR,
+                download_images=args.images,
+            )
+        
+        # Scrape single post
+        scraper.scrape_post(args.post_url)
+        return
 
     if args.url:
         if args.premium:
