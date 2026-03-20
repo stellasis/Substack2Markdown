@@ -134,6 +134,7 @@ def process_markdown_images(md_content: str, author: str, post_slug: str, pbar=N
             download_image(resolved_url, save_path, pbar)
 
         rel_path = os.path.relpath(save_path, Path(BASE_MD_DIR) / author)
+        rel_path = rel_path.replace("\\", "/")  # Ensure forward slashes
         return f"({rel_path})"
 
     pattern = r'\(https://substackcdn\.com/image/fetch/[^\s\)]+\)'
@@ -744,10 +745,10 @@ class BaseSubstackScraper(ABC):
         self.base_substack_url: str = base_substack_url
 
         self.writer_name: str = extract_main_part(base_substack_url)
-        md_save_dir: str = f"{md_save_dir}/{self.writer_name}"
+        md_save_dir: str = os.path.join(md_save_dir, self.writer_name)
 
         self.md_save_dir: str = md_save_dir
-        self.html_save_dir: str = f"{html_save_dir}/{self.writer_name}"
+        self.html_save_dir: str = os.path.join(html_save_dir, self.writer_name)
 
         if not os.path.exists(md_save_dir):
             os.makedirs(md_save_dir)
