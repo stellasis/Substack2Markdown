@@ -75,6 +75,46 @@ def get_publication_url(url: str) -> str:
     return f"{parsed.scheme}://{parsed.netloc}/"
 
 
+def normalize_substack_url(url: str) -> str:
+    """Normalize a URL and ensure it has a scheme and host."""
+    normalized_url = url.strip()
+    if not normalized_url:
+        raise ValueError("Substack URL cannot be empty.")
+
+    parsed = urlparse(normalized_url)
+    if not parsed.scheme:
+        normalized_url = f"https://{normalized_url}"
+        parsed = urlparse(normalized_url)
+
+    if not parsed.netloc:
+        raise ValueError(f"Invalid Substack URL: {url}")
+
+    return normalized_url
+
+
+def resolve_substack_request_urls(
+    post_url: Optional[str],
+    publication_url: Optional[str],
+    fallback_url: Optional[str],
+) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Resolve publication URL and optional single-post URL from request inputs.
+    Priority: post_url > publication_url > fallback_url.
+    """
+    for raw_url in (post_url, publication_url, fallback_url):
+        if not raw_url:
+            continue
+
+        normalized_url = normalize_substack_url(raw_url)
+        if is_post_url(normalized_url):
+            return get_publication_url(normalized_url), normalized_url
+
+        parsed = urlparse(normalized_url)
+        return f"{parsed.scheme}://{parsed.netloc}/", None
+
+    return None, None
+
+
 def get_post_slug(url: str) -> str:
     """Extract the post slug from a Substack post URL."""
     match = re.search(r'/p/([^/]+)', url)
@@ -1355,66 +1395,36 @@ def main():
         driver_path = args.edge_driver_path
         browser_path = args.edge_path
 
-    # Single post mode
-    if args.post_url:
-        if not is_post_url(args.post_url):
-            print(f"Error: {args.post_url} is not a valid Substack post URL")
-            return
-        
-        base_url = get_publication_url(args.post_url)
-        
-        if args.premium:
-            scraper = PremiumSubstackScraper(
-                base_substack_url=base_url,
-                md_save_dir=args.directory or BASE_MD_DIR,
-                html_save_dir=args.html_directory or BASE_HTML_DIR,
-                download_images=args.images,
-                browser=args.browser,
-                headless=args.headless,
-                use_persistent_profile=args.persistent_profile,
-                skip_login=args.skip_login,
-            )
-        else:
-            scraper = SubstackScraper(
-                base_substack_url=base_url,
-                md_save_dir=args.directory or BASE_MD_DIR,
-                html_save_dir=args.html_directory or BASE_HTML_DIR,
-                download_images=args.images,
-            )
-        
-        # Scrape single post
-        scraper.scrape_post(args.post_url)
+    try:
+        normalized_post_url = normalize_substack_url(args.post_url) if args.post_url else None
+        normalized_url = normalize_substack_url(args.url) if args.url else None
+        resolved_base_substack_url, resolved_post_url = resolve_substack_request_urls(
+            post_url=normalized_post_url,
+            publication_url=normalized_url,
+            fallback_url=BASE_SUBSTACK_URL,
+        )
+        print(normalized_post_url)
+        print(normalized_url)
+        print("resolved_base_substack_url", resolved_base_substack_url)
+        print("resolved_post_url", resolved_post_url)
+
+        # return
+    except ValueError as exc:
+        print(f"Error: {exc}")
         return
 
-    if args.url:
-        if args.premium:
-            scraper = PremiumSubstackScraper(
-                base_substack_url=args.url,
-                md_save_dir=args.directory,
-                html_save_dir=args.html_directory,
-                download_images=args.images,
-                browser=args.browser,
-                headless=args.headless,
-                driver_path=driver_path,
-                browser_path=browser_path,
-                user_agent=args.user_agent,
-                use_persistent_profile=args.persistent_profile,
-                skip_login=args.skip_login,
-            )
-        else:
-            scraper = SubstackScraper(
-                args.url,
-                md_save_dir=args.directory,
-                html_save_dir=args.html_directory,
-                download_images=args.images,
-            )
-        scraper.scrape_posts(args.number)
+    if normalized_post_url and not is_post_url(normalized_post_url):
+        print(f"Error: {normalized_post_url} is not a valid Substack post URL")
+        return
 
-    else:
-        # Use hardcoded values
-        if USE_PREMIUM:
-            scraper = PremiumSubstackScraper(
-                base_substack_url=BASE_SUBSTACK_URL,
+    if not resolved_base_substack_url:
+        print("Error: No Substack URL provided. Use --post-url, --url, or set BASE_SUBSTACK_URL.")
+        return
+
+    def build_scraper(use_premium: bool) -> BaseSubstackScraper:
+        if use_premium:
+            return PremiumSubstackScraper(
+                base_substack_url=resolved_base_substack_url,
                 md_save_dir=args.directory,
                 html_save_dir=args.html_directory,
                 download_images=args.images,
@@ -1426,13 +1436,26 @@ def main():
                 use_persistent_profile=args.persistent_profile,
                 skip_login=args.skip_login,
             )
-        else:
-            scraper = SubstackScraper(
-                base_substack_url=BASE_SUBSTACK_URL,
-                md_save_dir=args.directory,
-                html_save_dir=args.html_directory,
-                download_images=args.images,
-            )
+
+        return SubstackScraper(
+            base_substack_url=resolved_base_substack_url,
+            md_save_dir=args.directory,
+            html_save_dir=args.html_directory,
+            download_images=args.images,
+        )
+
+    use_cli_mode = bool(normalized_post_url or normalized_url)
+    use_premium = args.premium if use_cli_mode else USE_PREMIUM
+    scraper = build_scraper(use_premium=use_premium)
+
+    # Single post can come from --post-url, --url <post>, or BASE_SUBSTACK_URL <post>.
+    if resolved_post_url:
+        scraper.scrape_post(resolved_post_url)
+        return
+
+    if normalized_url:
+        scraper.scrape_posts(args.number)
+    else:
         scraper.scrape_posts(num_posts_to_scrape=NUM_POSTS_TO_SCRAPE)
 
 
