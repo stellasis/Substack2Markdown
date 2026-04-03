@@ -4,6 +4,7 @@ import subprocess
 import threading
 from pathlib import Path
 from functools import wraps
+from urllib.parse import urlparse
 from flask import Flask, request, jsonify, send_from_directory, abort
 
 app = Flask(__name__)
@@ -26,6 +27,34 @@ def require_api_key(f):
             abort(401, description="Invalid or missing API key")
         return f(*args, **kwargs)
     return decorated
+
+
+def normalize_post_url(post_url):
+    parsed = urlparse(post_url.strip())
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}".rstrip("/")
+
+
+def find_existing_post(post_url):
+    normalized_url = normalize_post_url(post_url)
+    parsed = urlparse(normalized_url)
+    writer_handle = parsed.netloc.split(".")[0]
+    json_path = Path(PROJECT_DIR) / "data" / f"{writer_handle}.json"
+
+    if not json_path.exists():
+        return None
+
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            posts = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    for post in posts:
+        saved_url = post.get("url", "").strip()
+        if saved_url and normalize_post_url(saved_url) == normalized_url:
+            return post
+
+    return None
 
 
 # ─── Scrape worker ───────────────────────────────────────────────────────────
@@ -73,6 +102,13 @@ def scrape():
 
     if not post_url or "/p/" not in post_url:
         return jsonify({"error": "Invalid Substack post URL"}), 400
+
+    existing_post = find_existing_post(post_url)
+    if existing_post:
+        return jsonify({
+            "status": "already_downloaded",
+            "post": existing_post,
+        }), 200
 
     global job_counter
     with job_lock:
