@@ -1063,7 +1063,7 @@ class BaseSubstackScraper(ABC):
         """Scrape a single post and save as markdown, HTML, and JSON."""
         soup = self.get_url_soup(url)
         if soup is None:
-            print("❌ Failed to fetch post (may have failed authentication)")
+            print("[ERROR] Failed to fetch post (may have failed authentication)")
             return
         
         title, subtitle, like_count, date, md_content = self.extract_post_data(soup)
@@ -1075,25 +1075,25 @@ class BaseSubstackScraper(ABC):
             total_images = count_images_in_markdown(md_content)
             if total_images > 0:
                 slug = get_post_slug(url)
-                print(f"📥 Downloading {total_images} images...")
+                print(f"[INFO] Downloading {total_images} images for {slug}...")
                 with tqdm(total=total_images, desc=f"Downloading images for {slug}", leave=True) as img_pbar:
                     md_content = process_markdown_images(md_content, self.writer_name, slug, img_pbar)
-                print("✅ Images downloaded!\n")
+                print("[OK] Images downloaded!\n")
 
         self.save_to_file(md_filepath, md_content)
-        print(f"✅ Saved markdown: {md_filepath}")
+        print(f"[OK] Saved markdown: {md_filepath}")
 
         self.save_to_html_file(html_filepath, self.md_to_html(md_content))
-        print(f"✅ Saved HTML: {html_filepath}")
+        print(f"[OK] Saved HTML: {html_filepath}")
 
         self.save_essays_data_to_json(essays_data=[{
             "title": title, "subtitle": subtitle, "like_count": like_count,
             "date": date, "url": url, "file_link": md_filepath, "html_link": html_filepath
         }])
-        print(f"✅ Saved JSON metadata\n")
+        print(f"[OK] Saved JSON metadata\n")
 
         print("=" * 70)
-        print(f"✨ Successfully scraped: {title}")
+        print(f"[OK] Successfully scraped: {title}")
         print(f"   Date: {date}")
         print(f"   Likes: {like_count}")
         print("=" * 70)
