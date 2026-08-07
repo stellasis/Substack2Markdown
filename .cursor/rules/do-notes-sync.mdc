@@ -1,0 +1,10 @@
+---
+description: When DigitalOcean droplet/volume/stack changes, update .notes/do same turn
+alwaysApply: true
+---
+
+# DO droplet → `.notes/do` sync
+
+**Canon:** `.notes/do/state.md` (this repo). Setup detail: `.notes/do/setup.md`.
+
+Same-turn: any droplet/volume/service/SSH/firewall change on `stellasis-personal-tools` (`152.42.203.20`) → refresh Recall · Shape · Inventory · Next in `state.md`. No secrets.
