@@ -5,6 +5,7 @@ alwaysApply: true
 
 # DO droplet → `.notes/do` sync
 
-**Canon:** `.notes/do/state.md` (this repo). Setup detail: `.notes/do/setup.md`.
+**Canon:** `.notes/do/state.md` (this repo). Setup: `.notes/do/setup.md`.  
+**Ops scripts:** `.notes/do/scripts/` (`books/` · `tls/` · `nginx/` · `archive/` — see `scripts/README.md`).
 
-Same-turn: any droplet/volume/service/SSH/firewall change on `stellasis-personal-tools` (`152.42.203.20`) → refresh Recall · Shape · Inventory · Next in `state.md`. No secrets.
+Same-turn: any droplet/volume/service/SSH/firewall/script-layout change on `stellasis-personal-tools` (`152.42.203.20`) → refresh Recall · Shape · Inventory · Next in `state.md`. No secrets. Script moves → update `scripts/README.md`.
