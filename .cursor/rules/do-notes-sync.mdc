@@ -1,11 +1,35 @@
 ---
-description: When DigitalOcean droplet/volume/stack changes, update .notes/do same turn
+description: When DigitalOcean droplet/volume/stack changes, update homebase personal-tools/do same turn
 alwaysApply: true
 ---
 
-# DO droplet → `.notes/do` sync
+# DO droplet → homebase `personal-tools/do` sync
 
-**Canon:** `.notes/do/state.md` (this repo). Setup: `.notes/do/setup.md`.  
-**Ops scripts:** `.notes/do/scripts/` (`books/` · `tls/` · `nginx/` · `archive/` — see `scripts/README.md`).
+**Canon notes:** `~/Repos/homebase/personal-tools/do/` (not this repo).  
+Win: `C:\Users\ssofia\Repos\homebase\personal-tools\do\`  
+**Primary:** `state.md`. Setup: `setup.md`.  
+**Ops scripts:** `do/scripts/` (`books/` · `tls/` · `nginx/` · `archive/` — see `scripts/README.md`).
 
-Same-turn: any droplet/volume/service/SSH/firewall/script-layout change on `stellasis-personal-tools` (`152.42.203.20`) → refresh Recall · Shape · Inventory · Next in `state.md`. No secrets. Script moves → update `scripts/README.md`.
+## When (same turn — do not leave stale)
+
+Any change to the personal droplet `stellasis-personal-tools` / `152.42.203.20`, including:
+
+- Volume attach / detach / resize / mount path / fstab
+- Docker / Calibre-Web / Caddy / nginx / systemd services
+- Disk free, RAM, firewall ports, HTTPS
+- App path moves, new jobs on the box (Substack, ebooks, …)
+- SSH host aliases or key path changes (also note in state Recall)
+- New/moved DO runnable scripts under `do/scripts/`
+
+## What to update
+
+1. Edit `do/state.md`: Recall bullets · Shape ASCII · Inventory table · Next
+2. Snapshot date at top if facts changed
+3. Keep secrets out (no passwords / API keys)
+4. If scripts layout changed → `do/scripts/README.md` + `do/README.md` one-liner
+
+## Not this rule
+
+- Everyday Substack scrape/content sync (`.notes/` / `.substack-sync/` in this repo)
+- Azure / Contoso infra book
+- Local ebook gather/scan (`Tools/ebook-cleanup`)

@@ -26,3 +26,6 @@ substack_images/
 
 # Ignore env files
 .env
+
+# Local working notes (not product)
+.notes/
