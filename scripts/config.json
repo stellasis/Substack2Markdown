@@ -8,7 +8,7 @@
     "substack_md_files",
     "data"
   ],
-  "stashDir": "../.substack-sync/_from-remote",
+  "stashDir": "_from-remote",
   "minRemoteFreeMb": 400,
   "excludeNames": ["README.md"]
 }

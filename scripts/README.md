@@ -10,4 +10,4 @@
 ./scripts/Sync-RemoteSuperset.sh
 ```
 
-Runtime stash (remote-only pulls): `.substack-sync/_from-remote/` (gitignored).
+Runtime stash (remote-only pulls): `scripts/_from-remote/` (gitignored).
