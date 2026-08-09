@@ -30,6 +30,6 @@ Any change to the personal droplet `stellasis-personal-tools` / `152.42.203.20`,
 
 ## Not this rule
 
-- Everyday Substack scrape/content sync (`.notes/` / `.substack-sync/` in this repo)
+- Everyday Substack scrape/content sync (`.notes/` · `scripts/` Sync-RemoteSuperset in this repo)
 - Azure / Contoso infra book
 - Local ebook gather/scan (`Tools/ebook-cleanup`)

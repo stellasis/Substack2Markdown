@@ -29,3 +29,6 @@ substack_images/
 
 # Local working notes (not product)
 .notes/
+
+# Sync runtime stash (scripts/ owns the automation)
+.substack-sync/
