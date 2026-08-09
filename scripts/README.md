@@ -1,13 +1,14 @@
-# scripts — automation / helpers
+# scripts — by job
 
-| Job | Entry |
-|-----|--------|
-| Local → DO content merge (union, no delete) | `./Sync-RemoteSuperset.sh` |
+| Chunk | Job | Entry |
+|-------|-----|--------|
+| **remote-superset/** | Local → DO content merge (union, no delete) | `Sync-RemoteSuperset.sh` |
 
 ```bash
 # Git Bash
-./scripts/Sync-RemoteSuperset.sh --dry-run
-./scripts/Sync-RemoteSuperset.sh
+cd scripts/remote-superset
+./Sync-RemoteSuperset.sh --dry-run
+./Sync-RemoteSuperset.sh
 ```
 
-Runtime stash (remote-only pulls): `scripts/_from-remote/` (gitignored).
+Runtime stash: `remote-superset/_from-remote/` (gitignored).

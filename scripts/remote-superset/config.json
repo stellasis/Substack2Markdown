@@ -1,5 +1,5 @@
 {
-  "localRoot": "..",
+  "localRoot": "../..",
   "sshHost": "do-p-tools-ssofia",
   "remoteRoot": "/home/ssofia/Substack2Markdown",
   "contentDirs": [

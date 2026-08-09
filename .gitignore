@@ -30,5 +30,5 @@ substack_images/
 # Local working notes (not product)
 .notes/
 
-# Sync runtime stash (under scripts/)
-scripts/_from-remote/
+# Sync runtime stash
+scripts/remote-superset/_from-remote/

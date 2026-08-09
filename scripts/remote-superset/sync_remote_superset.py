@@ -145,7 +145,7 @@ def main() -> None:
 
     cfg = load_config(cfg_path)
     tool_dir = Path(__file__).resolve().parent
-    # localRoot / stashDir may be relative to the tool folder (repo lives one level up when localRoot is "..")
+    # localRoot / stashDir may be relative to this chunk folder (repo is ../.. when localRoot is "../..")
     local_root = Path(cfg["localRoot"])
     if not local_root.is_absolute():
         local_root = (tool_dir / local_root).resolve()

@@ -2,8 +2,8 @@
 # Merge local Substack2Markdown -> droplet (union / remote-superset). No --delete.
 # Prefer Git Bash on Windows.
 #
-#   ./scripts/Sync-RemoteSuperset.sh --dry-run
-#   ./scripts/Sync-RemoteSuperset.sh
+#   ./scripts/remote-superset/Sync-RemoteSuperset.sh --dry-run
+#   ./scripts/remote-superset/Sync-RemoteSuperset.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
